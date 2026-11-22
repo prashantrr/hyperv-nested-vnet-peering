@@ -1,1 +1,74 @@
+1)Login to Azure cloud shell with bash console without storage
+2)az account show or az login user account
+3)az account list --output table
+4)az account set --subscription="SUBSCRIPTION_ID" if more than one subscription
+5)terraform version
+6)mkdir terraform-azure
+  cd terraform-azure
+7)vi main.tf
+5)copy below provider block Save and exit in vi using Esc, then :wq and Enter.
+ 
+# We strongly recommend using the required_providers block to set the
+# Azure Provider source and version being used
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "=5.0.0"
+    }
+  }
+}
+
+# Configure the Microsoft Azure Provider
+provider "azurerm" {
+  features {}
+}
+
+6)terraform init
+
+7)export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv) (this will extract azure subscription id and set it as environment variable )
+
+8)Run below command to check terraform can authenticate successfully to azure.
+   terraform validate
+   terraform plan
+
+
+Reference- https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-cloud-shell-powershell
+
+
+to set environment variable for future bash loginuse below sequence
+
+vi ~/.bashrc
+export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+Esc :wq
+source ~/.bashrc
+echo $ARM_SUBSCRIPTION_ID
+
+
+
+to automate environment loading and switching between dev and prod
+
+dev
+az account set --subscription="YOUR-DEV-SUBSCRIPTION-ID"
+export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+echo "Switched to DEV environment"
+echo $ARM_SUBSCRIPTION_ID
+
+then execute source ~/dev.sh  to switch to dev subscription
+
+Prod
+
+az account set --subscription="YOUR-PROD-SUBSCRIPTION-ID"
+export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+echo "Switched to PROD environment"
+echo $ARM_SUBSCRIPTION_ID
+
+source ~/prod.sh
+
+
+
+
+
+
+
 

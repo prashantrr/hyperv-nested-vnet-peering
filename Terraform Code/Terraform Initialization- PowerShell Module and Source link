@@ -5,3 +5,10 @@ Set-AzContext -SubscriptionId "YOUR-DEV-SUBSCRIPTION-ID"  (Select Dev Subscripti
 Get-AzContext   (Verify current Azure Subscription )
 $env:ARM_SUBSCRIPTION_ID = (Get-AzContext).Subscription.Id  (Set terraform subscription environment Variable )
 
+https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows? - Azure CLI
+https://developer.hashicorp.com/terraform/install? -  Terraform Download Link
+https://code.visualstudio.com/download? -  VS Code Download Link 
+https://git-scm.com/install/? - git bash download link
+
+
+

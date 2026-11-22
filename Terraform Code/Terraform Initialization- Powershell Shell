@@ -1,4 +1,4 @@
-Connect-AzAccount
+az-AzAccount
 az version
 terraform version
 

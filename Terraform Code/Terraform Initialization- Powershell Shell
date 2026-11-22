@@ -1,0 +1,134 @@
+Connect-AzAccount
+az version
+terraform version
+
+check executable location
+Get-Command az
+Get-Command terraform
+
+az login
+az login --use-device-code (if browser authentication does not work )
+az account show --output table  (verify your login )
+az account list --output table  (List all your available subscription )
+az account set --subscription="YOUR-DEV-SUBSCRIPTION-ID"  (Select azure subscription if you have multiple    subscription)
+
+$env:ARM_SUBSCRIPTION_ID = (az account show --query id -o tsv)  (Set the environment variable )
+echo $env:ARM_SUBSCRIPTION_ID  (Verify Environment variable )
+
+(Note- You have to set this Environment each time you open new session until you save it in powershell $PROFILE )
+
+
+mkdir C:\Terraform\Scripts
+mkdir C:\Terraform\DEV
+mkdir C:\Terraform\PROD
+
+cd C:\Terraform\DEV
+
+code . (Open folder in VS Code )
+main.tf  (Inside Dev Folder create file named main.tf )
+
+Paste Below Configuration in file and save it
+
+
+# Configure Terraform and Azure provider
+
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "= 5.0.0"
+    }
+  }
+}
+
+# Configure Microsoft Azure Provider
+
+provider "azurerm" {
+  features {}
+}
+
+
+initialize terraform
+
+cd C:\Terraform\DEV
+terraform init
+terraform fmt  (Validate terraform Configuration )
+
+Automate Dev and Prod Subscription Switching
+
+Test-Path $PROFILE
+New-Item -Path $PROFILE -ItemType File -Force  (If above command false create it )
+notepad $PROFILE   (Open the Profile ) and below configuration in profile file 
+
+
+
+# Azure Subscription Configuration
+
+$DEV_SUBSCRIPTION_ID  = "YOUR-DEV-SUBSCRIPTION-ID"
+$PROD_SUBSCRIPTION_ID = "YOUR-PROD-SUBSCRIPTION-ID"
+
+
+# Switch to DEV
+function Switch-Dev {
+
+    az account set --subscription $DEV_SUBSCRIPTION_ID
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "DEV subscription selection failed" -ForegroundColor Red
+        return
+    }
+
+    $env:ARM_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID
+
+    Write-Host "Switched to DEV" -ForegroundColor Green
+
+    az account show --query "{Name:name, Subscription:id}" -o table
+}
+
+
+# Switch to PROD
+function Switch-Prod {
+
+    az account set --subscription $PROD_SUBSCRIPTION_ID
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "PROD subscription selection failed" -ForegroundColor Red
+        return
+    }
+
+    $env:ARM_SUBSCRIPTION_ID = $PROD_SUBSCRIPTION_ID
+
+    Write-Host "Switched to PROD" -ForegroundColor Yellow
+
+    az account show --query "{Name:name, Subscription:id}" -o table
+}
+
+. $PROFILE  (Load the Profile )
+
+Now Switch the Profile using 
+
+Switch-Dev or Switch-Prod
+
+
+
+Daily Command List for Dev Environment
+
+az login
+Switch-Dev
+cd C:\Terraform\DEV
+terraform init
+terraform validate
+terraform plan
+
+
+
+Daily Command list for Prod Environment
+
+Switch-Prod
+cd C:\Terraform\PROD
+terraform init
+terraform validate
+terraform plan
+
+
+

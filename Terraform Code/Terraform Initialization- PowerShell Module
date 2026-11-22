@@ -1,0 +1,7 @@
+Install-Module -Name Az -Repository PSGallery -Scope CurrentUser  (Install az powershell Module )
+Connect-AzAccount  (Login to Azure Account )
+Get-AzSubscription (List Azure Subscription )
+Set-AzContext -SubscriptionId "YOUR-DEV-SUBSCRIPTION-ID"  (Select Dev Subscription )
+Get-AzContext   (Verify current Azure Subscription )
+$env:ARM_SUBSCRIPTION_ID = (Get-AzContext).Subscription.Id  (Set terraform subscription environment Variable )
+

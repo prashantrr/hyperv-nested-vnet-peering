@@ -1,7 +1,4 @@
-Deploy a Hub-and-Spoke network topology using Terraform or Bicep (never click-ops in the portal). Connect a simulated on-premises environment (a nested Windows Server + Active Directory VM) via Site-to-Site VPN, configure Microsoft Entra Connect, and enforce governance using Azure Policy and Private Endpoints.
-
 On-premise Platform Zone creation on Azure
-
 1)Create Management Group named MG1. In MG1 Create subscription and under subscription place Resource group named RG1
 2)Create vnet named "On-Prem vnet" and subnet with 10.0.0.0/16 and 10.0.1.0/24 respectively and deploy VM with Standard_D8ds_v5 or Standard_E8ds_v5 with public IP address. Allow Default Port 3389 to VM for management
 3)create vnet with name "vnet-hub-lab" with Address space 10.10.0.0/16 and subnet 10.10.1.0/24

@@ -1,1 +1,19 @@
+Azure Hypre-V Host vNet Name and subnet Details
+
+On-Prem vNet 10.0.0.0/16 (Address Space )
+On-Prem Subnet 10.0.1.0/24 (Subnet Space )
+Azure Hyper-v Host- 10.0.1.4
+Azure Hyper-v Host Internal NIC Card Connected to Hyper-V Internal Switch- 192.168.0.1/24
+
+Hub vNet Name and Subnet Details
+Hub-vnet-lab 10.10.0.0/16
+Hub-vnet-subnet 10.10.1.0/24
+
+Nested VM Subnet Details- 192.168.100.0/24
+
+Nested VM Details
+VM-AD-001  192.168.0.2
+VM-ENT-001 192.168.0.3
+
+
 

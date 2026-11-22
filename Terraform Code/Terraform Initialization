@@ -56,13 +56,16 @@ echo $ARM_SUBSCRIPTION_ID
 
 then execute source ~/dev.sh  to switch to dev subscription
 
-Prod.sh
+to load dev subscription in bash shell run
+source ~/dev.sh
 
+Prod.sh
 az account set --subscription="YOUR-PROD-SUBSCRIPTION-ID"
 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 echo "Switched to PROD environment"
 echo $ARM_SUBSCRIPTION_ID
 
+to load prod subscription in bash shell run
 source ~/prod.sh
 
 

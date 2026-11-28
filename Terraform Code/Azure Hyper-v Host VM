@@ -7,6 +7,11 @@ resource "azurerm_resource_group" "RG" {
   location = "East-US"
 }
 
+resource "azurerm_resource_group" "RG1" {
+  name     = "rg-hyperv-storage"
+  location = "East-US"
+}
+
 # Optional: Fetch the existing VNet (useful if you need its location or address space)
 data "azurerm_virtual_network" "NG" {
   name                = "On-Prem-vnet"
@@ -67,8 +72,8 @@ resource "azurerm_windows_virtual_machine" "VM" {
 # 1. Create the 64 GB Managed Disk (eligible under Azure's free 2x 64 GB tier)
 resource "azurerm_managed_disk" "vhdx_disk" {
   name                 = "hyperv-baseline-disk"
-  location             = azurerm_resource_group.RG.location
-  resource_group_name  = azurerm_resource_group.RG.name
+  location             = azurerm_resource_group.RG1.location
+  resource_group_name  = azurerm_resource_group.RG1.name
   storage_account_type = "StandardSSD_LRS" # Standard SSD (E6) is covered by the free tier
   create_option        = "Empty"
   disk_size_gb         = 64

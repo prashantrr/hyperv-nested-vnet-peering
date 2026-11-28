@@ -24,6 +24,11 @@ New-NetFirewallRule -DisplayName "Allow Outbound to Nested 192.168.100.0/24" -Di
 11)Attach UDR in 10.0.1.0/24 (Azure Subnet ) for routing 192.168.100.0 /24 with next hop of Azure Hyper-V host VM (10.0.1.4)
 
  
+Command to SPin up Nested VM using differencing disk
+
+New-VHD -ParentPath "F:\BaseImages\Win2025_Eval_Base.vhdx" -Path "F:\VMs\NestedVM01.vhdx" -Differencing
+New-VM -Name "NestedVM01" -MemoryStartupBytes 4GB -VHDPath "F:\VMs\NestedVM01.vhdx" -Generation 2 -SwitchName "InternalSwitch"
+
 
 
 

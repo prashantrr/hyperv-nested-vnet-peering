@@ -89,15 +89,66 @@ resource "azurerm_virtual_machine_data_disk_attachment" "vhdx_disk_attach" {
     sku       = "2025-Datacenter"
     version   = "latest"
   }
-  resource "azurerm_virtual_machine_extension" "install_hyperv" {
-  name                 = "install-hyperv"
+  resource "azurerm_virtual_machine_extension" "hyperv_full_setup" {
+  name                 = "hyperv-full-setup"
   virtual_machine_id   = azurerm_windows_virtual_machine.VM.id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
   type_handler_version = "1.10"
 
+  # Ensure the 64 GB disk is attached before the script runs
+  depends_on = [
+    azurerm_virtual_machine_data_disk_attachment.vhdx_disk_attach
+  ]
+
   settings = jsonencode({
-    "commandToExecute" = "powershell -ExecutionPolicy Unrestricted -Command \"Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart\""
+    "commandToExecute" = <<-EOT
+      powershell -ExecutionPolicy Unrestricted -Command "
+        # 1. Enable IP forwarding on the Azure NIC (10.0.1.4)
+        $azIf = Get-NetAdapter | Where-Object { (Get-NetIPAddress -InterfaceIndex $_.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue).IPAddress -eq '10.0.1.4' };
+        if ($azIf) { Set-NetIPInterface -InterfaceIndex $azIf.ifIndex -Forwarding Enabled };
+
+        # 2. Build the Post-Reboot PowerShell script
+        $postScript = @'
+        # A. Safely initialize the 64 GB disk ONLY if it is RAW (never wipes existing VHDX data)
+        $rawDisk = Get-Disk | Where-Object { $_.PartitionStyle -eq 'RAW' -and $_.Size -gt 50GB };
+        if ($rawDisk) {
+          $rawDisk | Initialize-Disk -PartitionStyle GPT -PassThru |
+            New-Partition -DriveLetter F -UseMaximumSize |
+            Format-Volume -FileSystem NTFS -NewFileSystemLabel 'HyperVBase' -Confirm:$false
+        } else {
+          # If already formatted from a previous Spot VM, ensure it is online and mounted as F:
+          $existingDisk = Get-Disk | Where-Object { $_.OperationalStatus -eq 'Offline' };
+          if ($existingDisk) { $existingDisk | Set-Disk -IsOffline $false }
+        }
+
+        # B. Create Hyper-V Internal Switch (if it does not exist yet)
+        if (-not (Get-VMSwitch -Name 'InternalSwitch' -ErrorAction SilentlyContinue)) {
+          New-VMSwitch -Name 'InternalSwitch' -SwitchType Internal
+        }
+
+        # C. Assign Gateway IP (192.168.100.1/24) matching your Azure UDR and enable forwarding
+        $vSwitchIf = Get-NetAdapter | Where-Object { $_.Name -like '*InternalSwitch*' };
+        if ($vSwitchIf) {
+          New-NetIPAddress -InterfaceIndex $vSwitchIf.ifIndex -IPAddress '192.168.100.1' -PrefixLength 24 -ErrorAction SilentlyContinue;
+          Set-NetIPInterface -InterfaceIndex $vSwitchIf.ifIndex -Forwarding Enabled
+        }
+
+        # D. Clean up the one-time scheduled task
+        Unregister-ScheduledTask -TaskName 'PostHyperVSetup' -Confirm:$false
+'@;
+        Set-Content -Path 'C:\PostHyperVSetup.ps1' -Value $postScript;
+
+        # 3. Register the task to run once at startup after Hyper-V reboots
+        $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-ExecutionPolicy Unrestricted -File C:\PostHyperVSetup.ps1';
+        $trigger = New-ScheduledTaskTrigger -AtStartup;
+        Register-ScheduledTask -TaskName 'PostHyperVSetup' -Action $action -Trigger $trigger -User 'SYSTEM' -RunLevel Highest -Force;
+
+        # 4. Install Hyper-V and trigger reboot
+        Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Restart
+      "
+    EOT
   })
 }
+
 }
